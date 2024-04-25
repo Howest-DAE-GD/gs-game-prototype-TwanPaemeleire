@@ -1,8 +1,15 @@
 #pragma once
 #include "BaseGame.h"
+#include "Player.h"
+#include "Enemy.h"
+#include "SoundStream.h"
 class Game : public BaseGame
 {
 public:
+	enum class GameState {
+		menu, inGame, lost
+	};
+
 	explicit Game( const Window& window );
 	Game(const Game& other) = delete;
 	Game& operator=(const Game& other) = delete;
@@ -22,6 +29,16 @@ public:
 	void ProcessMouseUpEvent( const SDL_MouseButtonEvent& e ) override;
 
 private:
+
+	Player* m_pPlayer;
+
+	std::vector<Enemy*> m_EnemyVector;
+
+	float m_EnemySpawnDelay;
+	float m_EnemySpawnDelayDecrease;
+	float m_EnemySpawnCounter;
+
+	SoundStream* m_pBackGroundMusic;
 
 	// FUNCTIONS
 	void Initialize();

@@ -2,7 +2,7 @@
 #include "Game.h"
 
 Game::Game( const Window& window ) 
-	:BaseGame{ window }
+	:BaseGame{ window }, m_EnemyVector{}, m_EnemySpawnDelay{3.f}, m_EnemySpawnDelayDecrease{0.01f}, m_EnemySpawnCounter{0.f}
 {
 	Initialize();
 }
@@ -14,53 +14,64 @@ Game::~Game( )
 
 void Game::Initialize( )
 {
-	
+	m_pPlayer = new Player(Rectf{50.f, GetViewPort().height/2, 20.f, 20.f}, 10, GetViewPort().height);
+	m_pBackGroundMusic = new SoundStream("Music.mp3");
+	m_pBackGroundMusic->Play(true);
+	SoundStream::SetVolume(5);
 }
 
 void Game::Cleanup( )
 {
+	delete m_pPlayer;
+
+	for(int index{0}; index < m_EnemyVector.size(); ++index)
+	{
+		delete m_EnemyVector[index];
+	}
+
+	delete m_pBackGroundMusic;
 }
 
 void Game::Update( float elapsedSec )
 {
-	// Check keyboard state
-	//const Uint8 *pStates = SDL_GetKeyboardState( nullptr );
-	//if ( pStates[SDL_SCANCODE_RIGHT] )
-	//{
-	//	std::cout << "Right arrow key is down\n";
-	//}
-	//if ( pStates[SDL_SCANCODE_LEFT] && pStates[SDL_SCANCODE_UP])
-	//{
-	//	std::cout << "Left and up arrow keys are down\n";
-	//}
+	m_EnemySpawnDelay -= m_EnemySpawnDelayDecrease * elapsedSec;
+
+	m_EnemySpawnCounter += elapsedSec;
+	if (m_EnemySpawnCounter >= m_EnemySpawnDelay)
+	{
+		m_EnemySpawnCounter = 0.f;
+		int randomY = rand() % 440;
+		m_EnemyVector.push_back(new Enemy(Point2f{ 850.f, float(randomY) }));
+	}
+
+	m_pPlayer->Update(elapsedSec);
+
+	for (int index{ 0 }; index < m_EnemyVector.size(); ++index)
+	{
+		m_EnemyVector[index]->Update(elapsedSec);
+	}
 }
 
 void Game::Draw( ) const
 {
 	ClearBackground( );
+
+	m_pPlayer->Draw();
+
+	for (int index{ 0 }; index < m_EnemyVector.size(); ++index)
+	{
+		m_EnemyVector[index]->Draw();;
+	}
 }
 
 void Game::ProcessKeyDownEvent( const SDL_KeyboardEvent & e )
 {
-	//std::cout << "KEYDOWN event: " << e.keysym.sym << std::endl;
+	m_pPlayer->ProcessKeyDownEvent(e);
 }
 
 void Game::ProcessKeyUpEvent( const SDL_KeyboardEvent& e )
 {
-	//std::cout << "KEYUP event: " << e.keysym.sym << std::endl;
-	//switch ( e.keysym.sym )
-	//{
-	//case SDLK_LEFT:
-	//	//std::cout << "Left arrow key released\n";
-	//	break;
-	//case SDLK_RIGHT:
-	//	//std::cout << "`Right arrow key released\n";
-	//	break;
-	//case SDLK_1:
-	//case SDLK_KP_1:
-	//	//std::cout << "Key 1 released\n";
-	//	break;
-	//}
+	m_pPlayer->ProcessKeyUpEvent(e);
 }
 
 void Game::ProcessMouseMotionEvent( const SDL_MouseMotionEvent& e )
