@@ -30,6 +30,8 @@ public:
 
 private:
 
+	GameState m_State;
+
 	Player* m_pPlayer;
 
 	std::vector<Enemy*> m_EnemyVector;
@@ -41,6 +43,12 @@ private:
 	SoundStream* m_pBackGroundMusic;
 
 	// FUNCTIONS
+	void Collisions();
+
+	void ManageMenu();
+	int m_Currency;
+	int m_upgradeCost;
+
 	void Initialize();
 	void Cleanup( );
 	void ClearBackground( ) const;

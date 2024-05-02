@@ -20,5 +20,5 @@ void Enemy::Draw() const
 
 Rectf Enemy::GetEnemyRect() const
 {
-	return Rectf();
+	return m_EnemyRect;
 }

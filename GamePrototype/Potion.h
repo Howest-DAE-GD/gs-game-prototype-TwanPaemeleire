@@ -10,9 +10,9 @@ public:
 
 	int GetDamage();
 	bool HasReachedMaxDistance();
+	Rectf m_HitBox;
 
 private:
-	Rectf m_Position;
 	Vector2f m_DestPosition;
 	Vector2f m_Velocity;
 	float m_DistanceTarget;
