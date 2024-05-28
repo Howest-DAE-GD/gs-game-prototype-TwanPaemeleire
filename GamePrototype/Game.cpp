@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "Game.h"
 #include "utils.h"
+#include <stdlib.h> 
 #include <iostream>
 
 Game::Game( const Window& window ) 
@@ -11,26 +12,23 @@ Game::Game( const Window& window )
 
 Game::~Game( )
 {
-	Cleanup( );
+	Cleanup();
 }
 
 void Game::Initialize( )
 {
 	
 	m_EnemySpawnDelay= 3.f;
-	m_EnemySpawnDelayDecrease= 0.01f ;
+	m_EnemySpawnDelayDecrease= 0.03f ;
 	m_EnemySpawnCounter= 0.f ;
-	m_pPlayer = new Player(Rectf{50.f, GetViewPort().height/2, 20.f, 20.f}, 1, GetViewPort().height);
+	m_pPlayer = new Player(Rectf{50.f, GetViewPort().height/2, 20.f, 20.f}, 5, GetViewPort().height);
 	m_pBackGroundMusic = new SoundStream("Music.mp3");
 	m_pBackGroundMusic->Play(true);
 	SoundStream::SetVolume(5);
 	m_Currency = 0;
 	m_upgradeCost = 10;
 	m_State = GameState::inGame;
-
-	std::cout << "Upgrades:" << std::endl;
-	std::cout << "J to upgrade fireRate\nK to upgrade Speed" << std::endl;
-	std::cout << "SPACE in menu to return to the game" << std::endl;
+	m_Deaths = 0;
 }
 
 void Game::Cleanup( )
@@ -49,7 +47,10 @@ void Game::Update( float elapsedSec )
 {
 	if (m_State == GameState::inGame)
 	{
-		m_EnemySpawnDelay -= m_EnemySpawnDelayDecrease * elapsedSec;
+		if (m_EnemySpawnDelay > 0.05f - m_Deaths *0.005)
+		{
+			m_EnemySpawnDelay -= m_EnemySpawnDelayDecrease * elapsedSec;
+		}	
 		Collisions();
 
 		m_EnemySpawnCounter += elapsedSec;
@@ -57,7 +58,8 @@ void Game::Update( float elapsedSec )
 		{
 			m_EnemySpawnCounter = 0.f;
 			int randomY = rand() % 440;
-			m_EnemyVector.push_back(new Enemy(Point2f{ 850.f, float(randomY) }));
+			m_EnemyVector.push_back(new Enemy(Point2f{ 850.f, float(randomY) }, m_Deaths +1));
+
 		}
 
 		m_pPlayer->Update(elapsedSec);
@@ -77,7 +79,14 @@ void Game::Update( float elapsedSec )
 			delete m_EnemyVector[index];
 			m_EnemyVector.erase(m_EnemyVector.begin() + index);
 		}
+		++m_Deaths;
 		m_pPlayer->Reset();
+		ResetEnemies();
+		system("cls");
+		std::cout << "Upgrades:" << std::endl;
+		std::cout << "J to upgrade fireRate\nK to upgrade Speed" << std::endl;
+		std::cout << "X in menu to return to the game" << std::endl;
+		std::cout << "Currency: " << m_Currency << std::endl;
 		m_State = GameState::menu;
 	}
 }
@@ -99,7 +108,7 @@ void Game::Draw( ) const
 
 void Game::ProcessKeyDownEvent( const SDL_KeyboardEvent & e )
 {
-	m_pPlayer->ProcessKeyDownEvent(e);
+	
 }
 
 void Game::ProcessKeyUpEvent( const SDL_KeyboardEvent& e )
@@ -114,6 +123,11 @@ void Game::ProcessKeyUpEvent( const SDL_KeyboardEvent& e )
 			{
 				m_pPlayer->m_AttackDelay -= 0.1f;
 				m_Currency -= m_upgradeCost;
+				system("cls");
+				std::cout << "Upgrades:" << std::endl;
+				std::cout << "J to upgrade fireRate\nK to upgrade Speed" << std::endl;
+				std::cout << "X in menu to return to the game" << std::endl;
+				std::cout << "Currency: " << m_Currency << std::endl;
 				std::cout << "Upgraded FireRate" << std::endl;
 			}
 
@@ -123,10 +137,15 @@ void Game::ProcessKeyUpEvent( const SDL_KeyboardEvent& e )
 			{
 				m_pPlayer->m_SpeedY += 20.f;
 				m_Currency -= m_upgradeCost;
+				system("cls");
+				std::cout << "Upgrades:" << std::endl;
+				std::cout << "J to upgrade fireRate\nK to upgrade Speed" << std::endl;
+				std::cout << "X in menu to return to the game" << std::endl;
+				std::cout << "Currency: " << m_Currency << std::endl;
 				std::cout << "Upgraded FireRate" << std::endl;
 			}
 			break;
-		case SDLK_SPACE:
+		case SDLK_x:
 			m_State = GameState::inGame;
 			break;
 		}
@@ -188,11 +207,15 @@ void Game::Collisions()
 		{
 			if (utils::IsOverlapping(m_EnemyVector[enemyIndex]->GetEnemyRect(), m_pPlayer->m_PotionVector[index]->m_HitBox))
 			{
-				delete m_EnemyVector[enemyIndex];
-				m_EnemyVector.erase(m_EnemyVector.begin() + enemyIndex);
+				--m_EnemyVector[enemyIndex]->health;
+				if (m_EnemyVector[enemyIndex]->health <= 0)
+				{
+					delete m_EnemyVector[enemyIndex];
+					m_EnemyVector.erase(m_EnemyVector.begin() + enemyIndex);
+					m_Currency += 5;
+				}
 				delete m_pPlayer->m_PotionVector[index];
 				m_pPlayer->m_PotionVector.erase(m_pPlayer->m_PotionVector.begin() + index);
-				m_Currency += 5;
 				break;
 			}
 		}
@@ -200,35 +223,43 @@ void Game::Collisions()
 
 	for (int enemyIndex{ 0 }; enemyIndex < m_EnemyVector.size(); ++enemyIndex)
 	{
-		for (int healthIdx{ 0 }; healthIdx < m_pPlayer->m_MaxHealth; ++healthIdx)
-		{
-			if (utils::IsOverlapping(m_EnemyVector[enemyIndex]->GetEnemyRect(), m_pPlayer->m_HealthBoxes[healthIdx]))
+			if (m_EnemyVector[enemyIndex]->GetEnemyRect().left + m_EnemyVector[enemyIndex]->GetEnemyRect().width <= 0.f)
 			{
 				delete m_EnemyVector[enemyIndex];
 				m_EnemyVector.erase(m_EnemyVector.begin() + enemyIndex);
 
-				m_pPlayer->m_HealthBoxes[healthIdx] = Rectf{ 0.f, 0.f, 0.f, 0.f };
 
 				bool hasRemainingHealth{ false };
-
 				for (int healthIdx{ 0 }; healthIdx < m_pPlayer->m_MaxHealth; ++healthIdx)
 				{
 					if (m_pPlayer->m_HealthBoxes[healthIdx].width > 0.f)
 					{
+						m_pPlayer->m_HealthBoxes[healthIdx] = Rectf{ 0.f, 0.f, 0.f, 0.f };
 						hasRemainingHealth = true;
+						if (healthIdx == m_pPlayer->m_MaxHealth - 1) hasRemainingHealth = false;
 						break;
 					}
 				}
-
 				if (!hasRemainingHealth) m_State = GameState::lost;
 				break;
+
 			}
 		}
-	}
-
 }
 
 void Game::ManageMenu()
 {
+	//getch();
+	
+}
 
+void Game::ResetEnemies()
+{
+	m_EnemySpawnDelay = 3.f;
+	m_EnemySpawnCounter = 0.f;
+
+	for (int index{ 0 }; index < m_EnemyVector.size(); ++index)
+	{
+		delete m_EnemyVector[index];
+	}
 }

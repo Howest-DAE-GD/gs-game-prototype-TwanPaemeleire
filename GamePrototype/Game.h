@@ -41,9 +41,11 @@ private:
 	float m_EnemySpawnCounter;
 
 	SoundStream* m_pBackGroundMusic;
+	int m_Deaths;
 
 	// FUNCTIONS
 	void Collisions();
+	void ResetEnemies();
 
 	void ManageMenu();
 	int m_Currency;

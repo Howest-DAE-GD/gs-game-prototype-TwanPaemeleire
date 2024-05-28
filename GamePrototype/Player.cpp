@@ -11,7 +11,7 @@ Player::Player(const Rectf& playerRect,int health, float windowHeight)
 
 	for (int rectIdx{ 0 }; rectIdx < m_MaxHealth; ++rectIdx)
 	{
-		float yPos{30 + 25.f * rectIdx + 20.f *rectIdx};
+		float yPos{30 + 25.f * rectIdx + 80.f *rectIdx};
 	
 		m_HealthBoxes.push_back(Rectf{5.f, yPos, 30, 30});
 	}
@@ -41,6 +41,7 @@ void Player::Update(float elapsedSec)
 			m_PotionVector.erase(m_PotionVector.begin() + index);
 		}
 	}
+	ProcessKeyDownEvent();
 }
 
 void Player::Draw() const
@@ -68,22 +69,17 @@ void Player::Attack()
 	m_CanShoot = false;
 }
 
-void Player::ProcessKeyDownEvent(const SDL_KeyboardEvent& e)
+void Player::ProcessKeyDownEvent()
 {
-	switch (e.keysym.sym)
-	{
-	case SDLK_w:
-		m_Velocity.y = m_SpeedY;
-		break;
+	const Uint8* pStates = SDL_GetKeyboardState(nullptr);
+	bool isPressingUp{ bool(pStates[SDL_SCANCODE_W]) };
+	bool isPressingDown{ bool(pStates[SDL_SCANCODE_S]) };
+	bool isPressingShoot{ bool(pStates[SDL_SCANCODE_SPACE]) };
 
-	case SDLK_s:
-		m_Velocity.y = -m_SpeedY;
-		break;
+	if(isPressingUp) m_Velocity.y = m_SpeedY;
+	if(isPressingDown) m_Velocity.y = -m_SpeedY;
+	if(isPressingShoot) if (m_CanShoot) Attack();
 
-	case SDLK_SPACE:
-		if (m_CanShoot) Attack();
-			break;
-	}
 }
 
 void Player::ProcessKeyUpEvent(const SDL_KeyboardEvent& e)
@@ -103,10 +99,10 @@ void Player::ProcessKeyUpEvent(const SDL_KeyboardEvent& e)
 
 void Player::Reset()
 {
+	m_HealthBoxes.clear();
 	for (int rectIdx{ 0 }; rectIdx < m_MaxHealth; ++rectIdx)
 	{
-		float yPos{ 30 + 25.f * rectIdx + 20.f * rectIdx };
-
-		m_HealthBoxes[rectIdx]=Rectf{ 5.f, yPos, 30, 30 };
+		float yPos{ 30 + 25.f * rectIdx + 80.f * rectIdx };
+		m_HealthBoxes.push_back(Rectf{ 5.f, yPos, 30, 30 });
 	}
 }

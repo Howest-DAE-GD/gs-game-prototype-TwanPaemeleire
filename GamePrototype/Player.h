@@ -13,7 +13,7 @@ public:
 	void Draw() const;
 	void Attack();
 
-	void ProcessKeyDownEvent(const SDL_KeyboardEvent& e);
+	void ProcessKeyDownEvent();
 	void ProcessKeyUpEvent(const SDL_KeyboardEvent& e);
 	void Reset();
 
