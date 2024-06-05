@@ -22,13 +22,12 @@ void Game::Initialize( )
 	m_EnemySpawnDelayDecrease= 0.03f ;
 	m_EnemySpawnCounter= 0.f ;
 	m_pPlayer = new Player(Rectf{50.f, GetViewPort().height/2, 20.f, 20.f}, 5, GetViewPort().height);
-	m_pBackGroundMusic = new SoundStream("Music.mp3");
-	m_pBackGroundMusic->Play(true);
-	SoundStream::SetVolume(5);
 	m_Currency = 0;
 	m_upgradeCost = 10;
 	m_State = GameState::inGame;
 	m_Deaths = 0;
+
+	std::cout << "Press/Hold W and S to move.\nPress/Hold SPACE to shoot.\n";
 }
 
 void Game::Cleanup( )
@@ -39,8 +38,6 @@ void Game::Cleanup( )
 	{
 		delete m_EnemyVector[index];
 	}
-
-	delete m_pBackGroundMusic;
 }
 
 void Game::Update( float elapsedSec )
@@ -121,7 +118,7 @@ void Game::ProcessKeyUpEvent( const SDL_KeyboardEvent& e )
 		case SDLK_j:
 			if (m_Currency >= m_upgradeCost)
 			{
-				m_pPlayer->m_AttackDelay -= 0.1f;
+				m_pPlayer->m_AttackDelay -= 0.02f;
 				m_Currency -= m_upgradeCost;
 				system("cls");
 				std::cout << "Upgrades:" << std::endl;
@@ -135,14 +132,14 @@ void Game::ProcessKeyUpEvent( const SDL_KeyboardEvent& e )
 		case SDLK_k:
 			if (m_Currency >= m_upgradeCost)
 			{
-				m_pPlayer->m_SpeedY += 20.f;
+				m_pPlayer->m_SpeedY += 5.f;
 				m_Currency -= m_upgradeCost;
 				system("cls");
 				std::cout << "Upgrades:" << std::endl;
 				std::cout << "J to upgrade fireRate\nK to upgrade Speed" << std::endl;
 				std::cout << "X in menu to return to the game" << std::endl;
 				std::cout << "Currency: " << m_Currency << std::endl;
-				std::cout << "Upgraded FireRate" << std::endl;
+				std::cout << "Upgraded Speed" << std::endl;
 			}
 			break;
 		case SDLK_x:
@@ -261,5 +258,6 @@ void Game::ResetEnemies()
 	for (int index{ 0 }; index < m_EnemyVector.size(); ++index)
 	{
 		delete m_EnemyVector[index];
+		m_EnemyVector.erase(m_EnemyVector.begin() + index);
 	}
 }

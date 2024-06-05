@@ -31,6 +31,15 @@ void Player::Update(float elapsedSec)
 	}
 
 	m_PlayerRect.bottom += m_Velocity.y * elapsedSec;
+	if (m_PlayerRect.bottom + m_PlayerRect.height < 0.f)
+	{
+		m_PlayerRect.bottom = 500.f - m_PlayerRect.height;
+	}
+
+	else if (m_PlayerRect.bottom > 500.f)
+	{
+		m_PlayerRect.bottom = 0.f;
+	}
 
 	for (int index{ 0 }; index < m_PotionVector.size(); ++index)
 	{

@@ -2,7 +2,6 @@
 #include "BaseGame.h"
 #include "Player.h"
 #include "Enemy.h"
-#include "SoundStream.h"
 class Game : public BaseGame
 {
 public:
@@ -39,8 +38,6 @@ private:
 	float m_EnemySpawnDelay;
 	float m_EnemySpawnDelayDecrease;
 	float m_EnemySpawnCounter;
-
-	SoundStream* m_pBackGroundMusic;
 	int m_Deaths;
 
 	// FUNCTIONS
