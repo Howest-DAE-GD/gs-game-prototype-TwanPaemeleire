@@ -19,7 +19,7 @@ void Game::Initialize( )
 {
 	
 	m_EnemySpawnDelay= 3.f;
-	m_EnemySpawnDelayDecrease= 0.03f ;
+	m_EnemySpawnDelayDecrease= 0.06f ;
 	m_EnemySpawnCounter= 0.f ;
 	m_pPlayer = new Player(Rectf{50.f, GetViewPort().height/2, 20.f, 20.f}, 5, GetViewPort().height);
 	m_Currency = 0;
@@ -27,7 +27,7 @@ void Game::Initialize( )
 	m_State = GameState::inGame;
 	m_Deaths = 0;
 
-	std::cout << "Press/Hold W and S to move.\nPress/Hold SPACE to shoot.\n";
+	std::cout << "Press/Hold W and S to move.\nPress/Hold SPACE to shoot.\nEliminate the incoming enemies(red squares) before they steal your milk(white squares)!";
 }
 
 void Game::Cleanup( )
@@ -44,7 +44,7 @@ void Game::Update( float elapsedSec )
 {
 	if (m_State == GameState::inGame)
 	{
-		if (m_EnemySpawnDelay > 0.05f - m_Deaths *0.005)
+		if (m_EnemySpawnDelay > 0.2f - m_Deaths *0.005)
 		{
 			m_EnemySpawnDelay -= m_EnemySpawnDelayDecrease * elapsedSec;
 		}	
@@ -55,7 +55,8 @@ void Game::Update( float elapsedSec )
 		{
 			m_EnemySpawnCounter = 0.f;
 			int randomY = rand() % 440;
-			m_EnemyVector.push_back(new Enemy(Point2f{ 850.f, float(randomY) }, m_Deaths +1));
+			int lives{ (m_Deaths > 0) ? 2 : 1 };
+			m_EnemyVector.push_back(new Enemy(Point2f{ 850.f, float(randomY) }, lives));
 
 		}
 
@@ -71,11 +72,12 @@ void Game::Update( float elapsedSec )
 
 	else if (m_State == GameState::lost)
 	{
-		for (int index{ 0 }; index < m_EnemyVector.size(); ++index)
+		/*for (int index{ 0 }; index < m_EnemyVector.size(); ++index)
 		{
 			delete m_EnemyVector[index];
 			m_EnemyVector.erase(m_EnemyVector.begin() + index);
-		}
+		}*/
+
 		++m_Deaths;
 		m_pPlayer->Reset();
 		ResetEnemies();
@@ -118,8 +120,11 @@ void Game::ProcessKeyUpEvent( const SDL_KeyboardEvent& e )
 		case SDLK_j:
 			if (m_Currency >= m_upgradeCost)
 			{
-				m_pPlayer->m_AttackDelay -= 0.02f;
-				m_Currency -= m_upgradeCost;
+				if (m_pPlayer->m_AttackDelay > 0.3f)
+				{
+					m_pPlayer->m_AttackDelay -= 0.02f;
+					m_Currency -= m_upgradeCost;
+				}
 				system("cls");
 				std::cout << "Upgrades:" << std::endl;
 				std::cout << "J to upgrade fireRate\nK to upgrade Speed" << std::endl;
@@ -132,8 +137,11 @@ void Game::ProcessKeyUpEvent( const SDL_KeyboardEvent& e )
 		case SDLK_k:
 			if (m_Currency >= m_upgradeCost)
 			{
-				m_pPlayer->m_SpeedY += 5.f;
-				m_Currency -= m_upgradeCost;
+				if (m_pPlayer->m_SpeedY < 280.f)
+				{
+					m_pPlayer->m_SpeedY += 5.f;
+					m_Currency -= m_upgradeCost;
+				}
 				system("cls");
 				std::cout << "Upgrades:" << std::endl;
 				std::cout << "J to upgrade fireRate\nK to upgrade Speed" << std::endl;
