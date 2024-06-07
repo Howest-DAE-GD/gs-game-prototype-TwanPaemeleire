@@ -48,24 +48,34 @@ void Game::Update( float elapsedSec )
 		{
 			m_EnemySpawnDelay -= m_EnemySpawnDelayDecrease * elapsedSec;
 		}	
-		Collisions();
-
-		m_EnemySpawnCounter += elapsedSec;
-		if (m_EnemySpawnCounter >= m_EnemySpawnDelay)
+		if (!Collisions())
 		{
-			m_EnemySpawnCounter = 0.f;
-			int randomY = rand() % 440;
-			int lives{ (m_Deaths > 0) ? 2 : 1 };
-			m_EnemyVector.push_back(new Enemy(Point2f{ 850.f, float(randomY) }, lives));
+			m_EnemySpawnCounter += elapsedSec;
+			if (m_EnemySpawnCounter >= m_EnemySpawnDelay)
+			{
+				m_EnemySpawnCounter = 0.f;
+				int randomY = rand() % 440;
+				int lives{ (m_Deaths > 0) ? 2 : 1 };
+				m_EnemyVector.push_back(new Enemy(Point2f{ 850.f, float(randomY) }, lives));
 
+			}
+
+			m_pPlayer->Update(elapsedSec);
+
+			for (int index{ 0 }; index < m_EnemyVector.size(); ++index)
+			{
+				m_EnemyVector[index]->Update(elapsedSec);
+			}
 		}
 
-		m_pPlayer->Update(elapsedSec);
-
-		for (int index{ 0 }; index < m_EnemyVector.size(); ++index)
-		{
-			m_EnemyVector[index]->Update(elapsedSec);
+		else {
+			for (int index{ 0 }; index < m_EnemyVector.size(); ++index)
+			{
+				delete m_EnemyVector[index];
+				m_EnemyVector.erase(m_EnemyVector.begin() + index);
+			}
 		}
+		
 	}
 
 	else if (m_State == GameState::menu) ManageMenu();
@@ -151,6 +161,13 @@ void Game::ProcessKeyUpEvent( const SDL_KeyboardEvent& e )
 			}
 			break;
 		case SDLK_x:
+			for (int index{ 0 }; index < m_EnemyVector.size(); ++index)
+			{
+				delete m_EnemyVector[index];
+				m_EnemyVector.erase(m_EnemyVector.begin() + index);
+			}
+			m_EnemySpawnDelay = 3.f;
+			m_EnemySpawnCounter = 0.f;
 			m_State = GameState::inGame;
 			break;
 		}
@@ -204,7 +221,7 @@ void Game::ClearBackground( ) const
 }
 
 
-void Game::Collisions()
+bool Game::Collisions()
 {
 	for (int index{ 0 }; index < m_pPlayer->m_PotionVector.size(); ++index)
 	{
@@ -245,11 +262,16 @@ void Game::Collisions()
 						break;
 					}
 				}
-				if (!hasRemainingHealth) m_State = GameState::lost;
+				if (!hasRemainingHealth)
+				{
+					m_State = GameState::lost;
+					return true;
+				}
 				break;
 
 			}
 		}
+	return false;
 }
 
 void Game::ManageMenu()
@@ -263,9 +285,5 @@ void Game::ResetEnemies()
 	m_EnemySpawnDelay = 3.f;
 	m_EnemySpawnCounter = 0.f;
 
-	for (int index{ 0 }; index < m_EnemyVector.size(); ++index)
-	{
-		delete m_EnemyVector[index];
-		m_EnemyVector.erase(m_EnemyVector.begin() + index);
-	}
+	
 }

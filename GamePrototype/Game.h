@@ -41,7 +41,7 @@ private:
 	int m_Deaths;
 
 	// FUNCTIONS
-	void Collisions();
+	bool Collisions();
 	void ResetEnemies();
 
 	void ManageMenu();
